@@ -103,10 +103,27 @@ def process_task(line:str,
     """
     Processes a single generation task defined by a line from the input file.
     Args:
-        line: A string containing a JSON object for the task.
-        task_index: The index of the task (for logging).
+        line: A string containing a single JSON object representing one task.
+            The JSON object structure should be:
+            {
+                "text": "The input text for generation. (Required)",
+                "output_path": "path/to/save/output.wav (Required)",
+                "max_tokens": 1500 (Optional, overrides global default),
+                "cfg_scale": 3.5 (Optional, overrides global default),
+                "temperature": 1.2 (Optional, overrides global default),
+                "top_p": 0.9 (Optional, overrides global default),
+                "audio_prompt": "path/to/prompt.wav" (Optional, path to audio prompt for voice cloning)
+            }
+            Example Lines:
+            {"text": "This is the first dialogue segment.", "output_path": "output/audio_01.wav"}
+            {"text": "[S1] Hello there! [S2] General Kenobi!", "output_path": "output/star_wars.wav", "cfg_scale": 4.0, "temperature": 1.1}
+            {"text": "A third example using default settings.", "output_path": "output/audio_03.wav"}
+            {"text": "[S1] Clone this voice. [S2] Okay.", "output_path": "cloned/clone_test.wav", "audio_prompt": "prompts/speaker_a.wav"}
+
+        task_index: The 1-based index of the task (for logging).
         model: The loaded Dia model instance.
-        global_args: Parsed command-line arguments containing defaults.
+        global_args: Parsed command-line arguments containing global defaults.
+
     Returns:
         True if the task was processed successfully, False otherwise.
     """
