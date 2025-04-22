@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import torchaudio
 from huggingface_hub import hf_hub_download
+from torch.cuda.amp import autocast
 
 from .audio import audio_to_codebook, codebook_to_audio
 from .config import DiaConfig
@@ -250,14 +251,14 @@ class Dia:
         src_padding_mask_BxS = cond_src_padding_mask_BxS.expand(2, -1)
         enc_self_attn_mask_Bx1xSxS = cond_enc_self_attn_mask_Bx1xSxS.expand(2, -1, -1, -1)
 
-        # 2. Encoder Pass
-        # with torch.autocast(device_type="cuda", dtype=forward_dtype):
-        encoder_out = self.model.encoder(
-            x_ids=src_BxS,
-            src_positions=src_positions_BxS,
-            deterministic=True,
-            attn_mask=enc_self_attn_mask_Bx1xSxS,
-        )  # Shape: (B, S, E)
+        with autocast(enabled=True, dtype=torch.bfloat16): # Or torch.float16
+            encoder_out = self.model.encoder(
+                x_ids=src_BxS,
+                src_positions=src_positions_BxS,
+                deterministic=True,
+                attn_mask=enc_self_attn_mask_Bx1xSxS,
+            ) # Shape: (B, S, E)
+        encoder_out = encoder_out.float() # Cast back if needed by subsequent non-autocast code, though KV cache precomputation might handle it
 
         # 3. Prepare Decoder Inputs
         # 3-1. Allocate KV Cache (Static)
@@ -312,17 +313,18 @@ class Dia:
                 is_causal=False,
             )
 
-            _ = self.model.decoder.forward(
-                tgt_ids_BxTxC=generated_BxTxC,
-                encoder_out=encoder_out,
-                tgt_positions=prefill_tgt_pos,
-                src_positions=src_positions_BxS,
-                deterministic=True,
-                self_attn_mask=prefill_self_attn_mask,
-                cross_attn_mask=prefill_cross_attn_mask,
-                self_attention_cache=decoder_self_attention_cache,
-                cross_attention_cache=decoder_cross_attention_cache,
-            )
+            with autocast(enabled=True, dtype=torch.bfloat16): # Or torch.float16
+                _ = self.model.decoder.forward(
+                    tgt_ids_BxTxC=generated_BxTxC,
+                    encoder_out=encoder_out,
+                    tgt_positions=prefill_tgt_pos,
+                    src_positions=src_positions_BxS,
+                    deterministic=True,
+                    self_attn_mask=prefill_self_attn_mask,
+                    cross_attn_mask=prefill_cross_attn_mask,
+                    self_attention_cache=decoder_self_attention_cache,
+                    cross_attention_cache=decoder_cross_attention_cache,
+                )
 
             current_step = prefill_len - 1
 
@@ -371,15 +373,16 @@ class Dia:
                 device=self.device,
             )
 
-            logits_Bx1xCxV, new_cache = decode_step(
-                tgt_ids_Bx1xC=tgt_ids_Bx1xC,
-                tgt_pos_Bx1=tgt_pos_Bx1,
-                encoder_out=encoder_out,
-                self_attn_mask=None,
-                cross_attn_mask=decoder_cross_attn_mask,
-                self_attention_cache=decoder_self_attention_cache,
-                cross_attention_cache=decoder_cross_attention_cache,
-            )
+            with autocast(enabled=True, dtype=torch.bfloat16):
+                logits_Bx1xCxV, new_cache = decode_step(
+                    tgt_ids_Bx1xC=tgt_ids_Bx1xC,
+                    tgt_pos_Bx1=tgt_pos_Bx1,
+                    encoder_out=encoder_out,
+                    self_attn_mask=None,
+                    cross_attn_mask=decoder_cross_attn_mask,
+                    self_attention_cache=decoder_self_attention_cache,
+                    cross_attention_cache=decoder_cross_attention_cache,
+                )
 
             for i, layer_cache in enumerate(decoder_self_attention_cache):
                 layer_cache.update_cache(new_cache[i][0], new_cache[i][1])

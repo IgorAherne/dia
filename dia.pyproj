@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>9585c730-31b1-4835-8f1b-0b8d7779f299</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>dia.py</StartupFile>
+    <StartupFile>app.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,10 +22,36 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="app.py" />
+    <Compile Include="cli.py" />
     <Compile Include="dia.py" />
+    <Compile Include="dia\audio.py" />
+    <Compile Include="dia\config.py" />
+    <Compile Include="dia\layers.py" />
+    <Compile Include="dia\model.py" />
+    <Compile Include="dia\__init__.py" />
+    <Compile Include="example\simple.py" />
+    <Compile Include="example\voice_clone.py" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="MSBuild|venv|C:\_myDrive\repos\auto-vlog\AutoVlogProj\AutoVlogProj.pyproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="dia\" />
+    <Folder Include="dia\static\" />
+    <Folder Include="dia\static\images\" />
+    <Folder Include="dia\__pycache__\" />
+    <Folder Include="example\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include=".gitignore" />
+    <Content Include="dia\static\images\banner.png" />
+    <Content Include="dia\__pycache__\audio.cpython-311.pyc" />
+    <Content Include="dia\__pycache__\config.cpython-311.pyc" />
+    <Content Include="dia\__pycache__\layers.cpython-311.pyc" />
+    <Content Include="dia\__pycache__\model.cpython-311.pyc" />
+    <Content Include="dia\__pycache__\__init__.cpython-311.pyc" />
+    <Content Include="README.md" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
