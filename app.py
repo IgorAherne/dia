@@ -4,6 +4,8 @@ import time
 from pathlib import Path
 from typing import Optional, Tuple
 
+from huggingface_hub import hf_hub_download
+
 import gradio as gr
 import numpy as np
 import soundfile as sf
@@ -36,12 +38,41 @@ else:
 
 print(f"Using device: {device}")
 
+
 # Load Nari model and config
 print("Loading Nari model...")
 try:
-    # Use the function from inference.py
-    model = Dia.from_pretrained("nari-labs/Dia-1.6B", device=device)
-except Exception as e:
+    # Define paths and repo info
+    repo_id = "nari-labs/Dia-1.6B"
+    checkpoint_filename = "dia-v0_1.pth"
+    custom_config_path = Path("./config_bf16.json")# Custom config with lower precision
+
+    if not custom_config_path.is_file():
+        raise FileNotFoundError(f"Custom config file not found at: {custom_config_path}")
+
+    # Let Hugging Face Hub find/download the checkpoint
+    print(f"Locating/downloading checkpoint '{checkpoint_filename}' from '{repo_id}'...")
+    try:
+        # This will return the path to the cached file or download it if needed
+        checkpoint_path = hf_hub_download(
+            repo_id=repo_id,
+            filename=checkpoint_filename
+        )
+        print(f"Using checkpoint found at: {checkpoint_path}")
+    except Exception as e:
+        print(f"Error downloading/finding checkpoint from Hugging Face Hub: {e}")
+        raise RuntimeError("Failed to get model checkpoint from Hub.") from e
+
+    # Load using Dia.from_local with custom config and HF checkpoint
+    print(f"Loading model using custom config '{custom_config_path}' and checkpoint '{checkpoint_path}'...")
+    # Convert Path object back to string for from_local
+    model = Dia.from_local(str(custom_config_path), checkpoint_path, device=device)
+    print("Model loaded successfully.")
+
+except FileNotFoundError as e: # Catches the explicit check above
+    print(f"ERROR: {e}")
+    raise # Re-raise the specific error
+except Exception as e: # Catches Hub download errors or model loading errors
     print(f"Error loading Nari model: {e}")
     raise
 

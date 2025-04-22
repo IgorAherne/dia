@@ -29,7 +29,6 @@ def main():
     parser.add_argument(
         "--output", type=str, required=True, help="Path to save the generated audio file (e.g., output.wav)."
     )
-
     parser.add_argument(
         "--repo-id",
         type=str,
@@ -38,6 +37,9 @@ def main():
     )
     parser.add_argument(
         "--local-paths", action="store_true", help="Load model from local config and checkpoint files."
+    )
+    parser.add_argument(
+        "--use-torch-compile", action="store_true", help="Speed up generation. Initial run will be slower, then uses cached."
     )
 
     parser.add_argument(
@@ -126,6 +128,7 @@ def main():
             cfg_scale=args.cfg_scale,
             temperature=args.temperature,
             top_p=args.top_p,
+            use_torch_compile=args.use_torch_compile
         )
         print("Audio generation complete.")
 
