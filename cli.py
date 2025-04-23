@@ -127,7 +127,7 @@ def process_task(line:str,
     Returns:
         True if the task was processed successfully, False otherwise.
     """
-    print(f"\n--- Processing Task {task_index} ---")
+    print(f"\n--- Dia TTS Processing Task {task_index} ---")
     line = line.strip()
     if not line:
         print("  Skipping empty line.")
