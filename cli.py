@@ -36,7 +36,7 @@ def parse_arguments() -> argparse.Namespace:
         help="Enable torch.compile for potentially faster generation (after first run). Default is False."
     )
     parser.add_argument(
-        "--config", type=str, help="Path to local config.json file (required if --local-paths is set)."
+        "--config", type=str, default="./model_custom_config_bf16.json", help="Path to local config.json file (required if --local-paths is set)."
     )
     parser.add_argument(
         "--checkpoint", type=str, help="Path to local model checkpoint .pth file (required if --local-paths is set)."
@@ -159,7 +159,7 @@ def process_task(line:str,
         # Handle audio_prompt specifically: get from task data, default is None
         task_audio_prompt = task_data.get("audio_prompt", None) # No global default needed
 
-        print(f"  Text: '{task_text[:50]}...'")
+        print(f"  Text: '{task_text}'")
         print(f"  Output Path: {task_output_path}")
         print(f"  Parameters: max_tokens={task_max_tokens}, cfg={task_cfg_scale}, temp={task_temperature}, top_p={task_top_p}, prompt={task_audio_prompt}")
 
