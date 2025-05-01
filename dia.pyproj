@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>9585c730-31b1-4835-8f1b-0b8d7779f299</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>app.py</StartupFile>
+    <StartupFile>cli.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -24,7 +24,6 @@
   <ItemGroup>
     <Compile Include="app.py" />
     <Compile Include="cli.py" />
-    <Compile Include="dia.py" />
     <Compile Include="dia\audio.py" />
     <Compile Include="dia\config.py" />
     <Compile Include="dia\layers.py" />
