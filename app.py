@@ -8,6 +8,8 @@ import contextlib
 from pathlib import Path
 from typing import Optional, Tuple
 
+from huggingface_hub import hf_hub_download
+
 import gradio as gr
 import numpy as np
 import soundfile as sf
@@ -37,6 +39,7 @@ else:
     device = torch.device("cpu")
 
 print(f"Using device: {device}")
+
 
 # Load Nari model and config
 print("Loading Nari model...")
