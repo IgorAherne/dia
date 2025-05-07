@@ -632,10 +632,6 @@ class Dia:
         if audio_prompt_path:
             print("Warning: audio_prompt_path is deprecated. Use audio_prompt instead.")
             audio_prompt = audio_prompt_path
-        if audio_prompt_text:
-            full_text = f"{audio_prompt_text.strip()}\n{text.strip()}"
-        else:
-            full_text = text.strip()
         if use_cfg_filter is not None:
             print("Warning: use_cfg_filter is deprecated.")
 
