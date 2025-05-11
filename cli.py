@@ -237,7 +237,7 @@ def main():
     total_tasks = len([line for line in lines if line.strip()]) # Count non-empty lines
 
     for i, line in enumerate(lines):
-        # Pass necessary info to the processing function
+        # Stage necessary info to the processing function
         if process_task(line, i + 1, model, args):
              success_count += 1
 
