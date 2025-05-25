@@ -176,6 +176,7 @@ class Dia:
         compute_dtype: str | ComputeDtype = ComputeDtype.FLOAT32,
         device: torch.device | None = None,
         load_dac: bool = True,
+        hf_local_dir: Optional[str] = None,
     ) -> "Dia":
         """Loads the Dia model from a Hugging Face Hub repository.
 
@@ -187,7 +188,9 @@ class Dia:
             compute_dtype: The computation dtype to use.
             device: The device to load the model onto. If None, will automatically select the best available device.
             load_dac: Whether to load the DAC model.
-
+            hf_local_dir: Optional path to a directory for storing Hugging Face models locally.
+                          If specified, models will be downloaded to and loaded from this directory
+                          instead of the default Hugging Face cache.
         Returns:
             An instance of the Dia model loaded with weights and set to eval mode.
 
@@ -198,11 +201,21 @@ class Dia:
         if isinstance(compute_dtype, str):
             compute_dtype = ComputeDtype(compute_dtype)
 
+        hub_download_kwargs = {}
+        if hf_local_dir:
+            hub_download_kwargs["local_dir"] = hf_local_dir
+            # Using local_dir_use_symlinks=False copies files directly,
+            # can be more robust on Windows and makes the local_dir self-contained.
+            hub_download_kwargs["local_dir_use_symlinks"] = False
+            print(f"Using Hugging Face local directory: {hf_local_dir}")
+
         # Load model directly using DiaModel's from_pretrained which handles HF download
         try:
-            loaded_model = DiaModel.from_pretrained(model_name, compute_dtype=compute_dtype.to_dtype())
+            loaded_model = DiaModel.from_pretrained(model_name, 
+                                                    compute_dtype=compute_dtype.to_dtype(),
+                                                    **hub_download_kwargs )
         except Exception as e:
-            raise RuntimeError(f"Error loading model from Hugging Face Hub ({model_name})") from e
+            raise RuntimeError(f"Error loading model from Hugging Face Hub ({model_name}) with local_dir '{hf_local_dir}'") from e
 
         config = loaded_model.config  # Get config from the loaded model
         dia = cls(config, compute_dtype, device, load_dac)

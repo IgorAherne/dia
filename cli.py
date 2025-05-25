@@ -15,6 +15,14 @@ def parse_arguments() -> argparse.Namespace:
     """Parses command-line arguments for the batch generation script."""
     parser = argparse.ArgumentParser(description="Generate audio for multiple tasks using the Dia model.")
 
+    # Calculate Default HF Local Directory
+    # Get the directory of the current script (cli.py)
+    script_dir = Path(__file__).resolve().parent
+    # Construct the default path: script_dir is C:\_myDrive\repos\auto-vlog\dia
+    # script_dir.parent is C:\_myDrive\repos\auto-vlog
+    # default_hf_local_dir_path will be C:\_myDrive\repos\auto-vlog\models\dia
+    default_hf_local_dir_path = script_dir.parent / "models" / "dia"
+
     # --- Input File Argument ---
     parser.add_argument(
         "--input-file", type=str, required=True, help="Path to a JSON Lines (.jsonl) file containing generation tasks."
@@ -29,6 +37,16 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "--local-paths", action="store_true", help="Load model from local config and checkpoint files."
+    )
+    parser.add_argument(
+        "--hf-local-dir",
+        type=str,
+        default=str(default_hf_local_dir_path), # Use the calculated default path
+        help=(
+            "Path to a directory for storing Hugging Face models locally. "
+            f"Defaults to an automatically determined path (e.g., '{default_hf_local_dir_path}') "
+            "based on the script's location. Overrides default Hugging Face cache."
+        ),
     )
     parser.add_argument(
         "--use-torch-compile",
@@ -78,6 +96,17 @@ def parse_arguments() -> argparse.Namespace:
             parser.error(f"Config file not found: {args.config}")
         if not os.path.exists(args.checkpoint):
             parser.error(f"Checkpoint file not found: {args.checkpoint}")
+            
+    # Resolve the hf_local_dir to an absolute path and ensure it exists
+    # This is useful if the user provides a relative path for --hf-local-dir
+    # For our default, it's already absolute.
+    if args.hf_local_dir:
+        hf_local_dir_abs = Path(args.hf_local_dir).resolve()
+        # The huggingface_hub library will create the directory if it doesn't exist,
+        # so we don't strictly need to do it here. But resolving it is good.
+        args.hf_local_dir = str(hf_local_dir_abs) 
+        # print(f"Effective Hugging Face local directory: {args.hf_local_dir}") # Optional: for debugging
+
     return args
 
 
@@ -237,7 +266,7 @@ def main():
     total_tasks = len([line for line in lines if line.strip()]) # Count non-empty lines
 
     for i, line in enumerate(lines):
-        # Stage necessary info to the processing function
+        # Pass necessary info to the processing function
         if process_task(line, i + 1, model, args):
              success_count += 1
 

@@ -20,10 +20,31 @@ from dia.model import Dia
 
 # --- Global Setup ---
 parser = argparse.ArgumentParser(description="Gradio interface for Nari TTS")
+
+# Calculate Default HF Local Directory for app.py
+script_dir_app = Path(__file__).resolve().parent
+default_hf_local_dir_path_app = script_dir_app.parent / "models" / "dia"
+
 parser.add_argument("--device", type=str, default=None, help="Force device (e.g., 'cuda', 'mps', 'cpu')")
 parser.add_argument("--share", action="store_true", help="Enable Gradio sharing")
+parser.add_argument(
+    "--hf-local-dir",
+    type=str,
+    default=str(default_hf_local_dir_path_app), # Use the calculated default path for app.py
+    help=(
+        "Path to a directory for storing Hugging Face models locally. "
+        f"Defaults to an automatically determined path (e.g., '{default_hf_local_dir_path_app}') "
+        "based on the script's location. Overrides default Hugging Face cache."
+    ),
+)
 
 args = parser.parse_args()
+
+# Resolve the hf_local_dir to an absolute path for app.py
+if args.hf_local_dir:
+    hf_local_dir_abs_app = Path(args.hf_local_dir).resolve()
+    args.hf_local_dir = str(hf_local_dir_abs_app)
+    print(f"Effective Hugging Face local directory for app: {args.hf_local_dir}") # Optional: for debugging
 
 
 # Determine device
@@ -48,7 +69,8 @@ try:
     model = Dia.from_pretrained(
         "nari-labs/Dia-1.6B",
         compute_dtype="float16",
-        device=device
+        device=device,
+        hf_local_dir=args.hf_local_dir
     )
 
     # Step 2: Apply dynamic quantization
